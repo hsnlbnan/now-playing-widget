@@ -5,7 +5,7 @@ import en from "./messages/en";
 import tr from "./messages/tr";
 
 export type Locale = "en" | "tr";
-type Messages = typeof en;
+type Messages = Record<string, unknown>;
 
 type Ctx = {
   locale: Locale;
@@ -50,4 +50,3 @@ export function useI18n() {
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
 }
-
