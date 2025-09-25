@@ -1,3 +1,5 @@
+![App Screenshot](https://github.com/hsnlbnan/now-playing-widget/main/public/screenshot.png)
+
 TR — Proje Hakkında
 
 Bu proje, MSN’in “Ne Dinliyor?” hissini modern web’e taşıyan küçük ve kullanışlı bir araç: Spotify hesabınla giriş yapıyorsun, sistem senin o an ya da en son dinlediğin şarkıyı bir SVG rozet olarak üretiyor. Bu rozeti GitHub README’ine, kişisel sitene ya da Notion sayfana ekleyebilirsin. Her şey olabildiğince sade; tek butonla giriş yetiyor.

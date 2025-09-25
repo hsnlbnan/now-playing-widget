@@ -1,7 +1,11 @@
 import type { Track } from "../domain/track";
 
 export function renderJson(track: Track | null) {
-  return Response.json(track ?? { track: null });
+  return Response.json(track ?? { track: null }, {
+    headers: {
+      "Cache-Control": "s-maxage=12, stale-while-revalidate=60",
+    },
+  });
 }
 
 export type RenderOptions = {
@@ -103,7 +107,7 @@ export function renderSvg(track: Track | null, opts: RenderOptions = {}) {
   return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": "s-maxage=5, stale-while-revalidate=55",
+      "Cache-Control": "s-maxage=12, stale-while-revalidate=60",
     },
   });
 }
