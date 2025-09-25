@@ -1,4 +1,4 @@
-![App Screenshot](https://github.com/hsnlbnan/now-playing-widget/main/public/screenshot.png)
+![app screenshot](https://github.com/hsnlbnan/now-playing-widget/blob/main/public/screenshot.png?raw=true)
 
 TR — Proje Hakkında
 
