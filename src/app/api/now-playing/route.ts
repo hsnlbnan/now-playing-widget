@@ -11,6 +11,13 @@ export async function GET(req: Request) {
   const format = url.searchParams.get("format");
   const accept = req.headers.get("accept") ?? "";
   const debug = url.searchParams.get("debug") === "1";
+  const showCover = !["0", "false"].includes((url.searchParams.get("cover") ?? "").toLowerCase());
+  const showLink = !["0", "false"].includes((url.searchParams.get("link") ?? "").toLowerCase());
+  const showTime = !["0", "false"].includes((url.searchParams.get("time") ?? "").toLowerCase());
+  const showProgress = !["0", "false"].includes((url.searchParams.get("progress") ?? "").toLowerCase());
+  const theme = ((url.searchParams.get("theme") ?? "dark").toLowerCase() === "light") ? "light" : "dark";
+  const layout = ((url.searchParams.get("layout") ?? "horizontal").toLowerCase() === "vertical") ? "vertical" : "horizontal";
+  const variant = ((url.searchParams.get("variant") ?? "default").toLowerCase() === "compact") ? "compact" : "default";
 
   const deps = {
     tokens: new KvOrEnvTokenStore(),
@@ -55,5 +62,5 @@ export async function GET(req: Request) {
   if (format === "json" || accept.includes("application/json")) {
     return debug ? Response.json(diag) : renderJson(track);
   }
-  return renderSvg(track);
+  return renderSvg(track, { showCover, showLink, showTime, showProgress, theme, layout, variant });
 }

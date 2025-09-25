@@ -1,7 +1,6 @@
 import type { TokenStore } from "../domain/ports";
 import { kvGet, kvSet } from "./kv";
 
-// For local dev: use TOKENS_JSON; For prod: use Vercel KV REST
 export class KvOrEnvTokenStore implements TokenStore {
   private map: Record<string, string>;
   private readonly useKv: boolean;
@@ -26,7 +25,6 @@ export class KvOrEnvTokenStore implements TokenStore {
       await kvSet(key, refreshToken);
       return;
     }
-    // Dev fallback updates in-memory map only
     this.map[user] = refreshToken;
   }
 }

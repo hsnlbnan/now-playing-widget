@@ -8,13 +8,12 @@ const SCOPES = [
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const user = url.searchParams.get("user");
-  if (!user) return new Response("Missing ?user=", { status: 400 });
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
   if (!clientId || !redirectUri) return new Response("Missing Spotify env", { status: 500 });
 
   const nonce = crypto.getRandomValues(new Uint8Array(12)).reduce((s, b) => s + b.toString(16).padStart(2, "0"), "");
-  const state = `${user}:${nonce}`;
+  const state = user ? `${user}:${nonce}` : nonce;
 
   const authUrl = new URL("https://accounts.spotify.com/authorize");
   authUrl.searchParams.set("response_type", "code");

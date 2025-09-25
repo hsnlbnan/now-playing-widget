@@ -10,10 +10,10 @@ export async function GET(req: Request) {
   const state = url.searchParams.get("state") ?? "";
   const cookie = parseCookie(req.headers.get("cookie"));
   if (!code || !state) return new Response("Missing code/state", { status: 400 });
-  const [user, nonce] = state.split(":");
-  if (!user || !nonce || cookie.get("sp_state") !== nonce) {
-    return new Response("Invalid state", { status: 400 });
-  }
+  const hasSeparator = state.includes(":");
+  const userFromState = hasSeparator ? state.split(":")[0] : "";
+  const nonce = hasSeparator ? state.split(":")[1] : state;
+  if (!nonce || cookie.get("sp_state") !== nonce) return new Response("Invalid state", { status: 400 });
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -38,6 +38,20 @@ export async function GET(req: Request) {
   const tokenJson = (await tokenRes.json()) as { refresh_token?: string; access_token?: string };
   const refresh = tokenJson.refresh_token;
   if (!refresh) return new Response("No refresh token returned", { status: 500 });
+  const access = tokenJson.access_token;
+
+  let user = userFromState;
+  if (!user) {
+    try {
+      if (!access) throw new Error("Missing access token to resolve user");
+      const me = await fetch("https://api.spotify.com/v1/me", { headers: { Authorization: `Bearer ${access}` } });
+      if (me.ok) {
+        const j = (await me.json()) as { id?: string };
+        user = (j.id || "").toString();
+      }
+    } catch {}
+  }
+  if (!user) user = `u_${crypto.randomUUID().slice(0, 8)}`;
 
   const useKv = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
   if (useKv) {
@@ -46,13 +60,10 @@ export async function GET(req: Request) {
   }
 
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const embed = `${site}/api/now-playing?user=${encodeURIComponent(user)}`;
-  const savedMsg = useKv
-    ? `Token saved to KV as nowplay:refresh:${escapeHtml(user)}`
-    : `KV not configured. Copy this refresh token and add to .env:\nTOKENS_JSON={"${escapeHtml(user)}":"${escapeHtml(refresh)}"}`;
-  const html = `<!doctype html><meta charset="utf-8"><title>Connected</title><style>body{font-family:system-ui;padding:32px;white-space:pre-wrap}</style><h1>Spotify connected ✓</h1><p>${savedMsg}</p><p>Embed in GitHub README:</p><pre>![Spotify Now Playing](${embed})</pre><p>JSON: <code>${embed}&format=json</code></p>`;
-  const res = new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+  const redirectTo = `${site}/?connected=1&user=${encodeURIComponent(user)}`;
+  const res = new Response(null, { status: 302, headers: { Location: redirectTo } });
   res.headers.append("Set-Cookie", "sp_state=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax");
+  res.headers.append("Set-Cookie", `sp_user=${encodeURIComponent(user)}; Path=/; Max-Age=31536000; SameSite=Lax`);
   return res;
 }
 
@@ -64,8 +75,4 @@ function parseCookie(cookie: string | null): Map<string, string> {
     if (idx > -1) map.set(part.slice(0, idx), decodeURIComponent(part.slice(idx + 1)));
   });
   return map;
-}
-
-function escapeHtml(s: string) {
-  return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
